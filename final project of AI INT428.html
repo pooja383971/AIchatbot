@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Assistant - Virtual Try-On Chatbot</title>
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --dark-color: #292f36;
+            --light-color: #f7fff7;
+            --accent-color: #ffd166;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chatbot-container {
+            width: 100%;
+            max-width: 900px;
+            height: 80vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            padding: 30px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80') center/cover;
+            opacity: 0.2;
+            z-index: -1;
+        }
+
+        .sidebar-header {
+            margin-bottom: 30px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .upload-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px dashed white;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .camera-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 10px;
+            color: var(--dark-color);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .camera-btn:hover {
+            background: #ffc233;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 150px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            position: relative;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chat-header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .chat-header h3 {
+            font-size: 18px;
+            color: var(--dark-color);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 15px;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bot-message {
+            background: #f1f3f6;
+            border-top-left-radius: 5px;
+            color: var(--dark-color);
+            align-self: flex-start;
+        }
+
+        .user-message {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-top-right-radius: 5px;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .input-area {
+            display: flex;
+            border: 1px solid #e0e0e0;
+            border-radius: 30px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .input-area button {
+            padding: 0 20px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .input-area button:hover {
+            opacity: 0.9;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .chip {
+            padding: 8px 15px;
+            background: #f1f3f6;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chip:hover {
+            background: #e0e0e0;
+        }
+
+        .camera-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+
+        .camera-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .camera-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .camera-preview {
+            width: 100%;
+            height: 400px;
+            background: #eee;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .camera-controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .capture-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .close-btn {
+            background: #eee;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .chatbot-container {
+                flex-direction: column;
+                height: 90vh;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 20px;
+            }
+            
+            .chat-area {
+                padding: 20px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Fashion Assistant</h2>
+                <p>Your personal styling companion</p>
+            </div>
+            
+            <div class="upload-section">
+                <label for="image-upload" class="upload-btn">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Image
+                </label>
+                <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                
+                <button class="camera-btn" id="open-camera">
+                    <i class="fas fa-camera"></i> Open Camera
+                </button>
+                
+                <img id="preview-image" class="preview-image" alt="Preview">
+            </div>
+            
+            <div class="body-shape-info">
+                <h4>Body Shape Analysis</h4>
+                <p>Upload your photo or use camera to get personalized fashion suggestions based on your body type.</p>
+            </div>
+        </div>
+        
+        <div class="chat-area">
+            <div class="chat-header">
+                <img src="https://i.pinimg.com/originals/3f/3d/d9/3f3dd9219f7bb1c9617cf4f154b70383.jpg" alt="Assistant">
+                <h3>Style Assistant</h3>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot-message">
+                    Hello! I'm your fashion assistant. Upload an image or use the camera to try on outfits virtually, and I'll give you personalized suggestions!
+                </div>
+                <div class="message bot-message">
+                    Try asking me things like:
+                    <div class="suggestion-chips">
+                        <div class="chip">What outfits suit my body type?</div>
+                        <div class="chip">Suggest casual outfits</div>
+                        <div class="chip">What colors look good on me?</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Type your fashion question...">
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="camera-modal" id="camera-modal">
+        <div class="camera-content">
+            <div class="camera-preview">
+                <video id="video" autoplay></video>
+            </div>
+            <div class="camera-controls">
+                <button class="close-btn" id="close-camera">Close</button>
+                <button class="capture-btn" id="capture-btn">Capture</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+            const imageUpload = document.getElementById('image-upload');
+            const previewImage = document.getElementById('preview-image');
+            const openCameraBtn = document.getElementById('open-camera');
+            const cameraModal = document.getElementById('camera-modal');
+            const closeCameraBtn = document.getElementById('close-camera');
+            const captureBtn = document.getElementById('capture-btn');
+            const video = document.getElementById('video');
+            
+            let stream = null;
+            
+            // Improved response generation based on user input
+            function generateResponse(userMessage) {
+                const lowerMessage = userMessage.toLowerCase();
+                
+                // Body type questions
+                if (lowerMessage.includes("body type") || lowerMessage.includes("body shape")) {
+                    return "Based on your photo, you appear to have an hourglass figure (balanced shoulders and hips with a defined waist). For your shape, I recommend:\n" +
+                           "- Fitted styles that accentuate your waist\n" +
+                           "- Wrap dresses and belted outfits\n" +
+                           "- V-neck or scoop neck tops\n" +
+                           "- High-waisted bottoms to emphasize your curves";
+                }
+                
+                // Casual outfit suggestions
+                if (lowerMessage.includes("casual") || lowerMessage.includes("everyday")) {
+                    return "For casual wear, I recommend:\n" +
+                           "1. High-waisted jeans with a fitted t-shirt and sneakers\n" +
+                           "2. Midi skirt with a tucked-in blouse and sandals\n" +
+                           "3. Jumpsuit with a denim jacket and ankle boots\n" +
+                           "Would you like to see specific outfit examples?";
+                }
+                
+                // Formal outfit suggestions
+                if (lowerMessage.includes("formal") || lowerMessage.includes("office") || lowerMessage.includes("work")) {
+                    return "For formal occasions, consider:\n" +
+                           "• Tailored blazer with pencil skirt or trousers\n" +
+                           "• Sheath dress with a structured blazer\n" +
+                           "• Wrap dress with heels\n" +
+                           "Stick to solid colors or subtle patterns for professional settings.";
+                }
+                
+                // Color suggestions
+                if (lowerMessage.includes("color") || lowerMessage.includes("colour")) {
+                    return "Based on your skin tone in the photo, these colors would look great:\n" +
+                           "✓ Emerald green\n" +
+                           "✓ Royal blue\n" +
+                           "✓ Burgundy\n" +
+                           "✓ Mustard yellow\n" +
+                           "✓ Soft pink\n" +
+                           "Avoid pastels if you have a warm undertone.";
+                }
+                
+                // Virtual try-on
+                if (lowerMessage.includes("virtual try") || lowerMessage.includes("try on")) {
+                    return "For virtual try-on, please use the camera button to take your photo. I'll then suggest outfits that would look good on you based on your body shape and size.";
+                }
+                
+                // General greeting
+                if (lowerMessage.includes("hello") || lowerMessage.includes("hi") || lowerMessage.includes("hey")) {
+                    return "Hello! How can I help with your fashion questions today? You can ask about outfits, colors, or upload a photo for personalized advice.";
+                }
+                
+                // Default responses if no specific match
+                const defaultResponses = [
+                    "I'd be happy to help with that. Could you provide more details about what you're looking for?",
+                    "For better recommendations, could you upload a photo or describe your body type?",
+                    "That's an interesting question! Based on general fashion principles, I would recommend...",
+                    "I can help with that. First, are you looking for casual or formal wear?",
+                    "Let me give you some suggestions based on current trends and your body type."
+                ];
+                
+                return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+            }
+            
+            // Send message function
+            function sendMessage() {
+                const message = userInput.value.trim();
+                if (message === '') return;
+                
+                // Add user message to chat
+                addMessage(message, 'user');
+                userInput.value = '';
+                
+                // Simulate bot response
+                setTimeout(() => {
+                    const response = generateResponse(message);
+                    addMessage(response, 'bot');
+                    
+                    // Add suggestions if the message is about outfits
+                    if (message.toLowerCase().includes('outfit') || 
+                        message.toLowerCase().includes('wear') || 
+                        message.toLowerCase().includes('suggest')) {
+                        setTimeout(() => {
+                            addSuggestionChips();
+                        }, 500);
+                    }
+                }, 1000);
+            }
+            
+            // Add message to chat
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+                
+                // Preserve line breaks in the response
+                const formattedText = text.replace(/\n/g, '<br>');
+                messageDiv.innerHTML = formattedText;
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Add suggestion chips
+            function addSuggestionChips() {
+                const chipsContainer = document.createElement('div');
+                chipsContainer.classList.add('suggestion-chips');
+                
+                const suggestions = [
+                    "Show me similar styles",
+                    "Where can I buy this?",
+                    "Suggest accessories",
+                    "Alternative colors"
+                ];
+                
+                suggestions.forEach(suggestion => {
+                    const chip = document.createElement('div');
+                    chip.classList.add('chip');
+                    chip.textContent = suggestion;
+                    chip.addEventListener('click', function() {
+                        addMessage(suggestion, 'user');
+                        setTimeout(() => {
+                            const response = generateResponse(suggestion);
+                            addMessage(response, 'bot');
+                        }, 1000);
+                    });
+                    chipsContainer.appendChild(chip);
+                });
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add('bot-message');
+                messageDiv.appendChild(chipsContainer);
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Event listeners
+            sendBtn.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // Image upload handling
+            imageUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        previewImage.src = event.target.result;
+                        previewImage.style.display = 'block';
+                        
+                        // Add message about the uploaded image
+                        setTimeout(() => {
+                            addMessage("Thanks for sharing your photo! I can analyze your body type and suggest flattering outfits. Would you like recommendations for casual or formal wear?", 'bot');
+                        }, 1000);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Camera functionality
+            openCameraBtn.addEventListener('click', function() {
+                cameraModal.classList.add('active');
+                startCamera();
+            });
+            
+            closeCameraBtn.addEventListener('click', function() {
+                cameraModal.classList.remove('active');
+                stopCamera();
+            });
+            
+            captureBtn.addEventListener('click', function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                previewImage.src = canvas.toDataURL('image/png');
+                previewImage.style.display = 'block';
+                
+                cameraModal.classList.remove('active');
+                stopCamera();
+                
+                // Add message about the captured image
+                setTimeout(() => {
+                    addMessage("Great photo! I can see you're about 5'6\" with an hourglass figure. For virtual try-on, would you like to see dresses, tops, or bottoms first?", 'bot');
+                }, 1000);
+            });
+            
+            // Start camera stream
+            function startCamera() {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(function(cameraStream) {
+                            stream = cameraStream;
+                            video.srcObject = stream;
+                        })
+                        .catch(function(error) {
+                            console.error("Camera error: ", error);
+                            addMessage("Couldn't access the camera. Please make sure you've granted camera permissions.", 'bot');
+                        });
+                } else {
+                    addMessage("Your browser doesn't support camera access or you're not on a secure (HTTPS) connection.", 'bot');
+                }
+            }
+            
+            // Stop camera stream
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                    stream = null;
+                }
+            }
+            
+            // Add click event to existing suggestion chips
+            document.querySelectorAll('.chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    addMessage(chip.textContent, 'user');
+                    setTimeout(() => {
+                        const response = generateResponse(chip.textContent);
+                        addMessage(response, 'bot');
+                    }, 1000);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
