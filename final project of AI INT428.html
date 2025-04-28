@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fashion Assistant - Virtual Try-On Chatbot</title>
+    <title>Fashion Assistant - AI Virtual Try-On Chatbot</title>
     <style>
         :root {
-            --primary-color: #ff6b6b;
-            --secondary-color: #4ecdc4;
-            --dark-color: #292f36;
-            --light-color: #f7fff7;
-            --accent-color: #ffd166;
+            --primary-color: #6C63FF;
+            --secondary-color: #5CE1E6;
+            --accent-color: #FFD166;
+            --dark-color: #2F2E41;
+            --light-color: #F9F9F9;
+            --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --border-radius: 20px;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-blur: blur(10px);
         }
 
         * {
@@ -21,7 +25,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -31,172 +35,211 @@
 
         .chatbot-container {
             width: 100%;
-            max-width: 900px;
-            height: 80vh;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            max-width: 1100px;
+            height: 85vh;
+            background: var(--light-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
             display: flex;
             overflow: hidden;
-            position: relative;
         }
 
         .sidebar {
-            width: 300px;
-            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            width: 350px;
+            background: linear-gradient(160deg, var(--primary-color), var(--secondary-color));
             padding: 30px;
             color: white;
             display: flex;
             flex-direction: column;
+            border-top-left-radius: var(--border-radius);
+            border-bottom-left-radius: var(--border-radius);
             position: relative;
-            z-index: 1;
         }
 
         .sidebar::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80') center/cover;
-            opacity: 0.2;
+            inset: 0;
+            background: url('https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80') no-repeat center/cover;
+            opacity: 0.1;
             z-index: -1;
         }
 
-        .sidebar-header {
-            margin-bottom: 30px;
-        }
-
         .sidebar-header h2 {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 5px;
+            font-weight: 700;
         }
 
         .sidebar-header p {
             font-size: 14px;
-            opacity: 0.8;
+            font-weight: 300;
+            opacity: 0.85;
         }
 
         .upload-section {
-            margin-bottom: 30px;
+            background: var(--glass-bg);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: var(--glass-blur);
+            margin-top: 30px;
+        }
+
+        .upload-btn, .camera-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
         }
 
         .upload-btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px dashed white;
-            border-radius: 10px;
+            background: transparent;
+            border: 2px dashed rgba(255, 255, 255, 0.4);
             color: white;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 15px;
         }
 
         .upload-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
 
         .camera-btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
             background: var(--accent-color);
-            border: none;
-            border-radius: 10px;
             color: var(--dark-color);
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
+            border: none;
+            box-shadow: 0 6px 20px rgba(255, 209, 102, 0.4);
         }
 
         .camera-btn:hover {
             background: #ffc233;
+            transform: translateY(-2px);
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            height: 180px;
+            display: none;
+            position: relative;
         }
 
         .preview-image {
             width: 100%;
-            height: 150px;
-            border-radius: 10px;
+            height: 100%;
             object-fit: cover;
-            margin-top: 15px;
-            display: none;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .remove-image:hover {
+            background: rgba(0,0,0,0.8);
+        }
+
+        .body-shape-info {
+            background: var(--glass-bg);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: auto;
+            backdrop-filter: var(--glass-blur);
+        }
+
+        .body-shape-info h4 {
+            font-size: 16px;
+            margin-bottom: 10px;
         }
 
         .chat-area {
             flex: 1;
+            background: #f9fafc;
+            padding: 30px;
             display: flex;
             flex-direction: column;
-            padding: 30px;
-            position: relative;
         }
 
         .chat-header {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
+            border-bottom: 1px solid #eaeef5;
+            padding-bottom: 15px;
         }
 
         .chat-header img {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            margin-right: 10px;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 3px solid var(--secondary-color);
         }
 
         .chat-header h3 {
-            font-size: 18px;
+            font-size: 20px;
             color: var(--dark-color);
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
+            scroll-behavior: smooth;
             padding-right: 10px;
             margin-bottom: 20px;
         }
 
         .message {
             margin-bottom: 15px;
+            padding: 14px 20px;
             max-width: 80%;
-            padding: 12px 15px;
-            border-radius: 15px;
-            line-height: 1.4;
-            position: relative;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            font-size: 14px;
+            border-radius: 18px;
+            line-height: 1.5;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            animation: fadeIn 0.4s ease;
         }
 
         .bot-message {
-            background: #f1f3f6;
-            border-top-left-radius: 5px;
-            color: var(--dark-color);
+            background: white;
             align-self: flex-start;
+            border: 1px solid #eaeef5;
+            color: var(--dark-color);
         }
 
         .user-message {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            border-top-right-radius: 5px;
             align-self: flex-end;
             margin-left: auto;
         }
 
         .input-area {
             display: flex;
-            border: 1px solid #e0e0e0;
-            border-radius: 30px;
-            overflow: hidden;
             background: white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e0e6ed;
         }
 
         .input-area input {
@@ -208,12 +251,16 @@
         }
 
         .input-area button {
-            padding: 0 20px;
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             border: none;
+            color: white;
+            padding: 0 25px;
             cursor: pointer;
-            transition: all 0.3s;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
         .input-area button:hover {
@@ -224,41 +271,39 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 10px;
         }
 
         .chip {
-            padding: 8px 15px;
-            background: #f1f3f6;
+            background: #eef2f7;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 13px;
+            color: #5a6474;
             cursor: pointer;
             transition: all 0.3s;
         }
 
         .chip:hover {
-            background: #e0e0e0;
+            background: #dce4ee;
+            transform: translateY(-2px);
         }
 
         .camera-modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s;
         }
 
         .camera-modal.active {
-            opacity: 1;
-            pointer-events: all;
+            display: flex;
         }
 
         .camera-content {
@@ -266,63 +311,124 @@
             border-radius: 15px;
             width: 90%;
             max-width: 600px;
-            padding: 20px;
-            position: relative;
-        }
-
-        .camera-preview {
-            width: 100%;
-            height: 400px;
-            background: #eee;
-            margin-bottom: 15px;
-            border-radius: 10px;
             overflow: hidden;
         }
 
-        .camera-preview video {
+        .camera-preview {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+        }
+
+        #video, #captured-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .camera-controls {
+        #captured-image {
+            display: none;
+        }
+
+        .camera-actions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: center;
             gap: 15px;
         }
 
-        .camera-controls button {
-            padding: 10px 20px;
+        .camera-action-btn {
+            background: var(--accent-color);
+            color: var(--dark-color);
             border: none;
-            border-radius: 5px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        .capture-btn {
-            background: var(--primary-color);
+        .camera-switch-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
             color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .camera-controls {
+            padding: 20px;
+            text-align: center;
         }
 
         .close-btn {
-            background: #eee;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .chatbot-container {
-                flex-direction: column;
-                height: 90vh;
-            }
-            
-            .sidebar {
-                width: 100%;
-                padding: 20px;
-            }
-            
-            .chat-area {
-                padding: 20px;
-            }
+        .typing-indicator {
+            display: flex;
+            gap: 8px;
+            padding: 14px 20px;
+            align-self: flex-start;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid white;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -333,51 +439,63 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <h2>Fashion Assistant</h2>
-                <p>Your personal styling companion</p>
+                <p>Your personal AI styling companion</p>
             </div>
             
             <div class="upload-section">
                 <label for="image-upload" class="upload-btn">
-                    <i class="fas fa-cloud-upload-alt"></i> Upload Image
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Outfit Photo
                 </label>
                 <input type="file" id="image-upload" accept="image/*" style="display: none;">
                 
                 <button class="camera-btn" id="open-camera">
-                    <i class="fas fa-camera"></i> Open Camera
+                    <i class="fas fa-camera"></i> Take Photo
                 </button>
                 
-                <img id="preview-image" class="preview-image" alt="Preview">
+                <div class="preview-container" id="preview-container">
+                    <img id="preview-image" class="preview-image" alt="Preview">
+                    <button class="remove-image" id="remove-image">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="body-shape-info">
-                <h4>Body Shape Analysis</h4>
-                <p>Upload your photo or use camera to get personalized fashion suggestions based on your body type.</p>
+                <h4>AI Fashion Analysis</h4>
+                <p>Upload your photo or use camera to get personalized fashion suggestions based on your body type, skin tone, and current trends.</p>
             </div>
         </div>
         
         <div class="chat-area">
             <div class="chat-header">
                 <img src="https://i.pinimg.com/originals/3f/3d/d9/3f3dd9219f7bb1c9617cf4f154b70383.jpg" alt="Assistant">
-                <h3>Style Assistant</h3>
+                <div>
+                    <h3>Style Assistant</h3>
+                    <p>Powered by AI</p>
+                </div>
             </div>
             
             <div class="chat-messages" id="chat-messages">
                 <div class="message bot-message">
-                    Hello! I'm your fashion assistant. Upload an image or use the camera to try on outfits virtually, and I'll give you personalized suggestions!
+                    👋 Hello! I'm your AI fashion assistant. Upload an image or use the camera to try on outfits virtually, and I'll give you personalized suggestions!
                 </div>
                 <div class="message bot-message">
-                    Try asking me things like:
+                    You can ask me things like:
                     <div class="suggestion-chips">
                         <div class="chip">What outfits suit my body type?</div>
-                        <div class="chip">Suggest casual outfits</div>
-                        <div class="chip">What colors look good on me?</div>
+                        <div class="chip">Suggest office outfits</div>
+                        <div class="chip">What colors look best on me?</div>
+                        <div class="chip">Virtual try-on this dress</div>
                     </div>
                 </div>
             </div>
             
             <div class="input-area">
-                <input type="text" id="user-input" placeholder="Type your fashion question...">
-                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+                <input type="text" id="user-input" placeholder="Ask me anything about fashion...">
+                <button id="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    <div class="spinner" id="spinner"></div>
+                </button>
             </div>
         </div>
     </div>
@@ -385,240 +503,270 @@
     <div class="camera-modal" id="camera-modal">
         <div class="camera-content">
             <div class="camera-preview">
-                <video id="video" autoplay></video>
+                <video id="video" autoplay playsinline></video>
+                <img id="captured-image" class="captured-image" alt="Captured">
+                <div class="camera-actions">
+                    <button class="camera-action-btn" id="retake-btn" style="display: none;">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <button class="camera-action-btn" id="capture-btn">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <button class="camera-action-btn" id="use-photo-btn" style="display: none;">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+                <button class="camera-switch-btn" id="switch-camera">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
             </div>
             <div class="camera-controls">
-                <button class="close-btn" id="close-camera">Close</button>
-                <button class="capture-btn" id="capture-btn">Capture</button>
+                <button class="close-btn" id="close-camera">
+                    <i class="fas fa-times"></i> Close
+                </button>
             </div>
         </div>
     </div>
 
     <script>
+        // Note: API key should be stored securely in a backend environment
+        const GEMINI_API_KEY = "AIzaSyCt51wC4nFdi8oTPwKszR1xVh2mc4UoqV0"; // Replace with secure method
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+        
         document.addEventListener('DOMContentLoaded', function() {
             const chatMessages = document.getElementById('chat-messages');
             const userInput = document.getElementById('user-input');
             const sendBtn = document.getElementById('send-btn');
             const imageUpload = document.getElementById('image-upload');
+            const previewContainer = document.getElementById('preview-container');
             const previewImage = document.getElementById('preview-image');
+            const removeImageBtn = document.getElementById('remove-image');
             const openCameraBtn = document.getElementById('open-camera');
             const cameraModal = document.getElementById('camera-modal');
             const closeCameraBtn = document.getElementById('close-camera');
-            const captureBtn = document.getElementById('capture-btn');
             const video = document.getElementById('video');
+            const capturedImage = document.getElementById('captured-image');
+            const captureBtn = document.getElementById('capture-btn');
+            const retakeBtn = document.getElementById('retake-btn');
+            const usePhotoBtn = document.getElementById('use-photo-btn');
+            const switchCameraBtn = document.getElementById('switch-camera');
+            const spinner = document.getElementById('spinner');
             
             let stream = null;
+            let facingMode = "user";
+            let currentImageData = null;
             
-            // Improved response generation based on user input
-            function generateResponse(userMessage) {
-                const lowerMessage = userMessage.toLowerCase();
-                
-                // Body type questions
-                if (lowerMessage.includes("body type") || lowerMessage.includes("body shape")) {
-                    return "Based on your photo, you appear to have an hourglass figure (balanced shoulders and hips with a defined waist). For your shape, I recommend:\n" +
-                           "- Fitted styles that accentuate your waist\n" +
-                           "- Wrap dresses and belted outfits\n" +
-                           "- V-neck or scoop neck tops\n" +
-                           "- High-waisted bottoms to emphasize your curves";
-                }
-                
-                // Casual outfit suggestions
-                if (lowerMessage.includes("casual") || lowerMessage.includes("everyday")) {
-                    return "For casual wear, I recommend:\n" +
-                           "1. High-waisted jeans with a fitted t-shirt and sneakers\n" +
-                           "2. Midi skirt with a tucked-in blouse and sandals\n" +
-                           "3. Jumpsuit with a denim jacket and ankle boots\n" +
-                           "Would you like to see specific outfit examples?";
-                }
-                
-                // Formal outfit suggestions
-                if (lowerMessage.includes("formal") || lowerMessage.includes("office") || lowerMessage.includes("work")) {
-                    return "For formal occasions, consider:\n" +
-                           "• Tailored blazer with pencil skirt or trousers\n" +
-                           "• Sheath dress with a structured blazer\n" +
-                           "• Wrap dress with heels\n" +
-                           "Stick to solid colors or subtle patterns for professional settings.";
-                }
-                
-                // Color suggestions
-                if (lowerMessage.includes("color") || lowerMessage.includes("colour")) {
-                    return "Based on your skin tone in the photo, these colors would look great:\n" +
-                           "✓ Emerald green\n" +
-                           "✓ Royal blue\n" +
-                           "✓ Burgundy\n" +
-                           "✓ Mustard yellow\n" +
-                           "✓ Soft pink\n" +
-                           "Avoid pastels if you have a warm undertone.";
-                }
-                
-                // Virtual try-on
-                if (lowerMessage.includes("virtual try") || lowerMessage.includes("try on")) {
-                    return "For virtual try-on, please use the camera button to take your photo. I'll then suggest outfits that would look good on you based on your body shape and size.";
-                }
-                
-                // General greeting
-                if (lowerMessage.includes("hello") || lowerMessage.includes("hi") || lowerMessage.includes("hey")) {
-                    return "Hello! How can I help with your fashion questions today? You can ask about outfits, colors, or upload a photo for personalized advice.";
-                }
-                
-                // Default responses if no specific match
-                const defaultResponses = [
-                    "I'd be happy to help with that. Could you provide more details about what you're looking for?",
-                    "For better recommendations, could you upload a photo or describe your body type?",
-                    "That's an interesting question! Based on general fashion principles, I would recommend...",
-                    "I can help with that. First, are you looking for casual or formal wear?",
-                    "Let me give you some suggestions based on current trends and your body type."
-                ];
-                
-                return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+            function initChat() {
+                addMessage("Hello! I'm your AI fashion assistant. Upload a photo or use the camera to get personalized fashion advice.", 'bot');
+                addMessage("Ask about body type analysis, color recommendations, outfit suggestions, virtual try-ons, or fashion trends.", 'bot');
             }
             
-            // Send message function
-            function sendMessage() {
-                const message = userInput.value.trim();
-                if (message === '') return;
-                
-                // Add user message to chat
-                addMessage(message, 'user');
-                userInput.value = '';
-                
-                // Simulate bot response
-                setTimeout(() => {
-                    const response = generateResponse(message);
-                    addMessage(response, 'bot');
-                    
-                    // Add suggestions if the message is about outfits
-                    if (message.toLowerCase().includes('outfit') || 
-                        message.toLowerCase().includes('wear') || 
-                        message.toLowerCase().includes('suggest')) {
-                        setTimeout(() => {
-                            addSuggestionChips();
-                        }, 500);
+            async function sendToGemini(prompt, imageData = null) {
+                showSpinner(true);
+                try {
+                    const requestBody = {
+                        contents: [{
+                            parts: [{ text: prompt }]
+                        }]
+                    };
+                    if (imageData) {
+                        requestBody.contents[0].parts.push({
+                            inlineData: {
+                                mimeType: "image/jpeg",
+                                data: imageData.split(',')[1]
+                            }
+                        });
                     }
-                }, 1000);
+                    const response = await fetch(GEMINI_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+                    const data = await response.json();
+                    showSpinner(false);
+                    if (data.candidates && data.candidates[0].content.parts[0].text) {
+                        return data.candidates[0].content.parts[0].text;
+                    }
+                    throw new Error("Unexpected API response");
+                } catch (error) {
+                    console.error("Gemini API error:", error);
+                    showSpinner(false);
+                    return "Sorry, I couldn't process your request. Please try again.";
+                }
             }
             
-            // Add message to chat
             function addMessage(text, sender) {
                 const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
-                messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
-                
-                // Preserve line breaks in the response
-                const formattedText = text.replace(/\n/g, '<br>');
-                messageDiv.innerHTML = formattedText;
-                
+                messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+                messageDiv.innerHTML = text.replace(/\n/g, '<br>');
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
             
-            // Add suggestion chips
-            function addSuggestionChips() {
+            function showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.classList.add('typing-indicator');
+                typingDiv.id = 'typing-indicator';
+                for (let i = 0; i < 3; i++) {
+                    typingDiv.appendChild(document.createElement('div')).classList.add('typing-dot');
+                }
+                chatMessages.appendChild(typingDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            function hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (typingIndicator) typingIndicator.remove();
+            }
+            
+            function showSpinner(show) {
+                spinner.style.display = show ? 'block' : 'none';
+                sendBtn.querySelector('i').style.display = show ? 'none' : 'block';
+            }
+            
+            function addSuggestionChips(questionType) {
                 const chipsContainer = document.createElement('div');
                 chipsContainer.classList.add('suggestion-chips');
-                
-                const suggestions = [
-                    "Show me similar styles",
-                    "Where can I buy this?",
-                    "Suggest accessories",
-                    "Alternative colors"
-                ];
-                
+                const suggestions = {
+                    bodyType: ["Dresses for my body type", "Best jeans for my shape", "Swimwear suggestions", "Professional outfits"],
+                    color: ["Summer color palette", "Winter color palette", "Jewelry metals", "Makeup colors"],
+                    outfit: ["Casual weekend outfits", "Office looks", "Date night outfits", "Travel outfits"],
+                    general: ["What's trending?", "Sustainable brands", "Accessory suggestions", "Seasonal tips"]
+                }[questionType] || suggestions.general;
                 suggestions.forEach(suggestion => {
                     const chip = document.createElement('div');
                     chip.classList.add('chip');
                     chip.textContent = suggestion;
-                    chip.addEventListener('click', function() {
-                        addMessage(suggestion, 'user');
-                        setTimeout(() => {
-                            const response = generateResponse(suggestion);
-                            addMessage(response, 'bot');
-                        }, 1000);
-                    });
+                    chip.addEventListener('click', () => sendUserMessage(suggestion));
                     chipsContainer.appendChild(chip);
                 });
-                
                 const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
-                messageDiv.classList.add('bot-message');
+                messageDiv.classList.add('message', 'bot-message');
                 messageDiv.appendChild(chipsContainer);
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
             
-            // Event listeners
-            sendBtn.addEventListener('click', sendMessage);
-            userInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage();
+            async function sendUserMessage(message) {
+                addMessage(message, 'user');
+                showTypingIndicator();
+                const prompt = `As a professional fashion stylist, respond to: "${message}". Provide detailed, personalized advice. If an image is uploaded, analyze body type, skin tone, and features for tailored suggestions. Be friendly and professional.`;
+                const response = await sendToGemini(prompt, currentImageData);
+                hideTypingIndicator();
+                addMessage(response, 'bot');
+                const lowerMessage = message.toLowerCase();
+                const suggestionType = lowerMessage.includes("body") || lowerMessage.includes("shape") ? 'bodyType' :
+                                      lowerMessage.includes("color") || lowerMessage.includes("skin tone") ? 'color' :
+                                      lowerMessage.includes("outfit") || lowerMessage.includes("dress") ? 'outfit' : 'general';
+                addSuggestionChips(suggestionType);
+            }
+            
+            sendBtn.addEventListener('click', () => {
+                const message = userInput.value.trim();
+                if (message) {
+                    userInput.value = '';
+                    sendUserMessage(message);
                 }
             });
             
-            // Image upload handling
-            imageUpload.addEventListener('change', function(e) {
+            userInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && userInput.value.trim()) {
+                    sendUserMessage(userInput.value.trim());
+                    userInput.value = '';
+                }
+            });
+            
+            imageUpload.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(event) {
+                    reader.onload = (event) => {
                         previewImage.src = event.target.result;
-                        previewImage.style.display = 'block';
-                        
-                        // Add message about the uploaded image
-                        setTimeout(() => {
-                            addMessage("Thanks for sharing your photo! I can analyze your body type and suggest flattering outfits. Would you like recommendations for casual or formal wear?", 'bot');
-                        }, 1000);
+                        previewContainer.style.display = 'block';
+                        currentImageData = event.target.result;
+                        sendUserMessage("I've uploaded a photo. Can you analyze my body type and suggest outfits?");
                     };
                     reader.readAsDataURL(file);
                 }
             });
             
-            // Camera functionality
-            openCameraBtn.addEventListener('click', function() {
+            removeImageBtn.addEventListener('click', () => {
+                previewContainer.style.display = 'none';
+                previewImage.src = '';
+                currentImageData = null;
+                imageUpload.value = '';
+            });
+            
+            openCameraBtn.addEventListener('click', () => {
+                if (window.location.protocol !== 'https:') {
+                    addMessage("Camera requires HTTPS. Please use a secure connection.", 'bot');
+                    return;
+                }
                 cameraModal.classList.add('active');
                 startCamera();
             });
             
-            closeCameraBtn.addEventListener('click', function() {
+            closeCameraBtn.addEventListener('click', () => {
                 cameraModal.classList.remove('active');
                 stopCamera();
             });
             
-            captureBtn.addEventListener('click', function() {
+            switchCameraBtn.addEventListener('click', () => {
+                facingMode = facingMode === "user" ? "environment" : "user";
+                stopCamera();
+                startCamera();
+            });
+            
+            captureBtn.addEventListener('click', () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                previewImage.src = canvas.toDataURL('image/png');
-                previewImage.style.display = 'block';
-                
-                cameraModal.classList.remove('active');
-                stopCamera();
-                
-                // Add message about the captured image
-                setTimeout(() => {
-                    addMessage("Great photo! I can see you're about 5'6\" with an hourglass figure. For virtual try-on, would you like to see dresses, tops, or bottoms first?", 'bot');
-                }, 1000);
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                capturedImage.src = canvas.toDataURL('image/jpeg', 0.9);
+                capturedImage.style.display = 'block';
+                video.style.display = 'none';
+                captureBtn.style.display = 'none';
+                retakeBtn.style.display = 'flex';
+                usePhotoBtn.style.display = 'flex';
             });
             
-            // Start camera stream
-            function startCamera() {
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    navigator.mediaDevices.getUserMedia({ video: true })
-                        .then(function(cameraStream) {
-                            stream = cameraStream;
-                            video.srcObject = stream;
-                        })
-                        .catch(function(error) {
-                            console.error("Camera error: ", error);
-                            addMessage("Couldn't access the camera. Please make sure you've granted camera permissions.", 'bot');
-                        });
-                } else {
-                    addMessage("Your browser doesn't support camera access or you're not on a secure (HTTPS) connection.", 'bot');
+            retakeBtn.addEventListener('click', () => {
+                capturedImage.style.display = 'none';
+                video.style.display = 'block';
+                captureBtn.style.display = 'flex';
+                retakeBtn.style.display = 'none';
+                usePhotoBtn.style.display = 'none';
+            });
+            
+            usePhotoBtn.addEventListener('click', () => {
+                previewImage.src = capturedImage.src;
+                previewContainer.style.display = 'block';
+                currentImageData = capturedImage.src;
+                cameraModal.classList.remove('active');
+                stopCamera();
+                capturedImage.style.display = 'none';
+                video.style.display = 'block';
+                captureBtn.style.display = 'flex';
+                retakeBtn.style.display = 'none';
+                usePhotoBtn.style.display = 'none';
+                sendUserMessage("I've taken a photo. Can you analyze my body type and suggest outfits?");
+            });
+            
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+                        audio: false
+                    });
+                    video.srcObject = stream;
+                    video.play();
+                } catch (error) {
+                    console.error("Camera error:", error);
+                    addMessage("Couldn't access camera. Please grant camera permissions.", 'bot');
+                    cameraModal.classList.remove('active');
                 }
             }
             
-            // Stop camera stream
             function stopCamera() {
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
@@ -627,17 +775,12 @@
                 }
             }
             
-            // Add click event to existing suggestion chips
             document.querySelectorAll('.chip').forEach(chip => {
-                chip.addEventListener('click', function() {
-                    addMessage(chip.textContent, 'user');
-                    setTimeout(() => {
-                        const response = generateResponse(chip.textContent);
-                        addMessage(response, 'bot');
-                    }, 1000);
-                });
+                chip.addEventListener('click', () => sendUserMessage(chip.textContent));
             });
+            
+            initChat();
         });
     </script>
 </body>
-</html> 
+</html>

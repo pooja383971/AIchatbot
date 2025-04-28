@@ -1,0 +1,124 @@
+/* Basic Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body and overall page layout */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* Chatbot Container */
+.chatbot-container {
+  width: 350px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header Section */
+.chat-header {
+  background-color: #007BFF;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header h2 {
+  margin: 0;
+}
+
+.close-btn {
+  background-color: transparent;
+  color: white;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #ff6f61;
+}
+
+/* Chat Window */
+.chat-window {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+  max-height: 350px;
+}
+
+/* Bot and User Messages */
+.chat-message {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 70%;
+  line-height: 1.5;
+}
+
+.bot-message {
+  background-color: #e1e1e1;
+  margin-right: auto;
+}
+
+.user-message {
+  background-color: #007BFF;
+  color: white;
+  margin-left: auto;
+}
+
+.chat-message p {
+  margin: 0;
+}
+
+/* User Input Section */
+.user-input {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  background-color: #eeeeee;
+}
+
+.user-input input {
+  width: 80%;
+  padding: 10px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.user-input button {
+  padding: 10px 15px;
+  margin-left: 10px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.user-input button:hover {
+  background-color: #0056b3;
+}
+
+.user-input input:focus {
+  outline: none;
+  border-color: #007BFF;
+}
